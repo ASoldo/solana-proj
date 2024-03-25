@@ -9,15 +9,13 @@ solana-test-validator --reset
 ## 2. Create new key pair
 
 ```sh
-solana-keygen new -o ~/.config/so
-lana/id.json
+solana-keygen new -o ~/.config/solana/id.json
 ```
 
 ## 3. Set keypair
 
 ```sh
-solana config set --keypair ~/.co
-nfig/solana/id.json
+solana config set --keypair ~/.config/solana/id.json
 ```
 
 ## 4. Set url
@@ -59,6 +57,6 @@ npm run start
 ## 10. Log response from blockchain
 
 ```sh
-solana logs | grep "ProgramId invoke" -A 10
+solana logs | grep "<PROGRAM_ID> invoke" -A 10
 
 ```
