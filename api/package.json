@@ -1,0 +1,29 @@
+{
+  "name": "solana-web3-example",
+  "version": "1.0.0",
+  "description": "",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "scripts": {
+    "start": "ts-node ./client/main.ts",
+    "clean": "npm run clean:program",
+    "build:program": "cargo build-bpf --manifest-path=../program/Cargo.toml --bpf-out-dir=dist/program",
+    "clean:program": "cargo clean --manifest-path=../program/Cargo.toml && rm -rf ./dist",
+    "test:program": "cargo test-bpf --manifest-path=../program/Cargo.toml"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.91.1",
+    "mz": "^2.7.0"
+  },
+  "devDependencies": {
+    "@tsconfig/recommended": "^1.0.4",
+    "@types/mz": "^2.7.8",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
