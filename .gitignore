@@ -1,2 +1,4 @@
 program/target
+api/dist/program
 api/node_modules
+web/node_modules
