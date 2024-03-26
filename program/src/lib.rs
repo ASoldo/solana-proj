@@ -11,11 +11,6 @@ use solana_program::{
 };
 
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
-pub struct Demo {
-    pub counter: u32,
-}
-
-#[derive(BorshSerialize, BorshDeserialize, Debug)]
 pub struct Calculator {
     pub value: u32,
 }
@@ -38,11 +33,6 @@ fn process_instruction(
     msg!("Executable?: {}", account.executable);
     msg!("Lamports?: {:#?}", account.lamports);
     msg!("Debug output complete");
-
-    // let mut demo_data = Demo::try_from_slice(&account.data.borrow())?;
-    // demo_data.counter += 1;
-    // demo_data.serialize(&mut &mut account.data.borrow_mut()[..])?;
-    // msg!("Current coutner value is: {}", demo_data.counter);
 
     let mut calc = Calculator::try_from_slice(&account.data.borrow())?;
     let calculator_instructions = CalculatorInstructions::try_from_slice(&instruction_data)?;

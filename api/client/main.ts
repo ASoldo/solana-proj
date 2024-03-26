@@ -106,33 +106,13 @@ export async function pingProgram(programName: string, operation: number, operat
   console.log("ping successfull");
 }
 
-export async function demo(programName: string, accountSpaceSize: number) {
+export async function calculator(programName: string, accountSpaceSize: number) {
   await connect();
   await getLocalAccount();
   await getProgram(programName);
   await configureClientAccount(accountSpaceSize);
   await pingProgram(programName, 1, 5);
 }
-
-class DemoStuffCounter {
-  counter = 0;
-  constructor(fields: { counter: number } | undefined = undefined) {
-    if (fields) {
-      this.counter = fields.counter;
-    }
-  }
-}
-
-const DemoStuffCounterSchema = {
-  struct: {
-    counter: 'u32',
-  },
-};
-
-const DEMO_STUFF_SIZE = borsh.serialize(
-  DemoStuffCounterSchema,
-  new DemoStuffCounter(),
-).length;
 
 class Calculator {
   value = 0;
@@ -157,66 +137,10 @@ const CALCULATOR_SIZE = borsh.serialize(
 
 
 
-demo("program", CALCULATOR_SIZE).then(
+calculator("program", CALCULATOR_SIZE).then(
   () => process.exit(),
   err => {
     console.error(err);
     process.exit(-1);
   }
 );
-
-// const PROGRAM_KEYPAIR_PATH = path.join(
-//   path.resolve(__dirname, "../dist/program"),
-//   "program-keypair.json"
-// );
-//
-// async function main() {
-//   console.log("Launching client...");
-//
-//   //connect to solana localhost net
-//   let connection = new Connection("http://127.0.0.1:8899", "confirmed");
-//   let secretKeyString = await fs.readFile(PROGRAM_KEYPAIR_PATH, "utf-8");
-//   const secretKey = Uint8Array.from(JSON.parse(secretKeyString));
-//   const programKeypair = Keypair.fromSecretKey(secretKey);
-//   let programId: PublicKey = programKeypair.publicKey;
-//
-//
-//   //generate an acount (keypair) to transact with our program
-//   const triggerKeypair = Keypair.generate();
-//   const airdropRequest = await connection.requestAirdrop(
-//     triggerKeypair.publicKey,
-//     LAMPORTS_PER_SOL
-//   );
-//
-//   const latestBlockhash = await connection.getLatestBlockhash();
-//   await connection.confirmTransaction({
-//     signature: airdropRequest,
-//     lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
-//     blockhash: latestBlockhash.blockhash,
-//
-//   });
-//
-//   // conduct a translaction with our program
-//   console.log("--Pinging Program--", programId.toBase58());
-//   const instruction = new TransactionInstruction({
-//     keys: [{ pubkey: triggerKeypair.publicKey, isSigner: false, isWritable: true }],
-//     programId,
-//     data: Buffer.alloc(0),
-//   });
-//
-//   await sendAndConfirmTransaction(
-//     connection,
-//     new Transaction().add(instruction),
-//     [triggerKeypair]
-//   );
-//
-// }
-//
-// main().then(
-//   () => process.exit(),
-//   err => {
-//     console.error(err);
-//     process.exit(-1);
-//   }
-// );
-//
