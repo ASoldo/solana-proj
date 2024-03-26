@@ -1,17 +1,17 @@
 {
   "name": "solana-web3-example",
   "version": "1.0.0",
-  "description": "",
+  "description": "Solana Native project",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/ASoldo/solana-proj.git"
   },
   "scripts": {
     "start": "ts-node ./client/main.ts",
     "clean": "npm run clean:program",
-    "build:program": "cargo build-bpf --manifest-path=../program/Cargo.toml --bpf-out-dir=dist/program",
+    "build:program": "cargo build-sbf --manifest-path=../program/Cargo.toml --sbf-out-dir=dist/program",
     "clean:program": "cargo clean --manifest-path=../program/Cargo.toml && rm -rf ./dist",
-    "test:program": "cargo test-bpf --manifest-path=../program/Cargo.toml"
+    "test:program": "cargo test-sbf --manifest-path=../program/Cargo.toml"
   },
   "dependencies": {
     "@solana/buffer-layout": "^4.0.1",

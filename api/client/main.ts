@@ -31,11 +31,17 @@ export async function getLocalAccount() {
   const configYml = await fs.readFile(CONFIG_FILE_PATH, { encoding: "utf-8" });
   const keypairPath = await yaml.parse(configYml).keypair_path;
   localKeypair = await createKeypairFromFile(keypairPath);
-  const airdropREquest = await connection.requestAirdrop(
+  const airdropRequest = await connection.requestAirdrop(
     localKeypair.publicKey,
     LAMPORTS_PER_SOL * 2
   );
-  await connection.confirmTransaction(airdropREquest);
+  const latestBlockhash = await connection.getLatestBlockhash();
+  await connection.confirmTransaction({
+    signature: airdropRequest,
+    lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+    blockhash: latestBlockhash.blockhash,
+
+  });
 
   console.log("Local account loaded successfully");
   console.log("Local account address is: ", localKeypair.publicKey);
