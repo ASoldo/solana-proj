@@ -1,4 +1,4 @@
 program/target/
-api/dist/program/
+api/dist/
 api/node_modules/
 web/node_modules/
