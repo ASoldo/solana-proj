@@ -12,8 +12,12 @@
   "dependencies": {
     "@pinia-plugin-persistedstate/nuxt": "^1.2.0",
     "@pinia/nuxt": "^0.5.1",
+    "@solana/wallet-adapter-wallets": "^0.19.32",
+    "@solana/web3.js": "^1.91.1",
+    "buffer": "^6.0.3",
     "nuxt": "^3.11.1",
     "pinia": "^2.1.7",
+    "solana-wallets-vue": "^0.6.1",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0"
   },
