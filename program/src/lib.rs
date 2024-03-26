@@ -1,3 +1,5 @@
+mod calculator;
+use crate::calculator::CalculatorInstructions;
 use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
@@ -11,6 +13,11 @@ use solana_program::{
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
 pub struct Demo {
     pub counter: u32,
+}
+
+#[derive(BorshSerialize, BorshDeserialize, Debug)]
+pub struct Calculator {
+    pub value: u32,
 }
 
 entrypoint!(process_instruction);
@@ -32,9 +39,61 @@ fn process_instruction(
     msg!("Lamports?: {:#?}", account.lamports);
     msg!("Debug output complete");
 
-    let mut demo_data = Demo::try_from_slice(&account.data.borrow())?;
-    demo_data.counter += 1;
-    demo_data.serialize(&mut &mut account.data.borrow_mut()[..])?;
-    msg!("Current coutner value is: {}", demo_data.counter);
+    // let mut demo_data = Demo::try_from_slice(&account.data.borrow())?;
+    // demo_data.counter += 1;
+    // demo_data.serialize(&mut &mut account.data.borrow_mut()[..])?;
+    // msg!("Current coutner value is: {}", demo_data.counter);
+
+    let mut calc = Calculator::try_from_slice(&account.data.borrow())?;
+    let calculator_instructions = CalculatorInstructions::try_from_slice(&instruction_data)?;
+    calc.value = calculator_instructions.evaluate(calc.value);
+    calc.serialize(&mut &mut account.data.borrow_mut()[..])?;
+    msg!("Value is now: {}", calc.value);
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use borsh::to_vec;
+    use solana_program::clock::Epoch;
+
+    #[test]
+    fn test_process_instruction() {
+        let program_id = Pubkey::new_unique();
+        let key = Pubkey::new_unique();
+        let mut lamports = 0;
+
+        let calc = Calculator { value: 0 };
+        let mut data = to_vec(&calc).unwrap();
+
+        let account = AccountInfo::new(
+            &key,
+            false,
+            true,
+            &mut lamports,
+            data.as_mut_slice(),
+            &program_id,
+            false,
+            Epoch::default(),
+        );
+
+        let operation_code: u32 = 1;
+        let operation_value: u32 = 5;
+        let mut instruction_data = Vec::new();
+        instruction_data.extend_from_slice(&operation_code.to_le_bytes());
+        instruction_data.extend_from_slice(&operation_value.to_le_bytes());
+
+        let accounts = vec![account];
+
+        let result = process_instruction(&program_id, &accounts, &instruction_data);
+
+        assert!(result.is_ok(), "process_instruction should return Ok(())");
+
+        let updated_calc = Calculator::try_from_slice(&data).unwrap();
+        assert_eq!(
+            updated_calc.value, 5,
+            "Calculator value should be updated to 5"
+        );
+    }
 }

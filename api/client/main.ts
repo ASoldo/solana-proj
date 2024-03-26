@@ -1,5 +1,5 @@
 import { Keypair, Connection, PublicKey, LAMPORTS_PER_SOL, TransactionInstruction, Transaction, sendAndConfirmTransaction, SystemProgram, sendAndConfirmRawTransaction } from "@solana/web3.js";
-import { createKeypairFromFile } from "./util"
+import { createCalculatorInstructions, createKeypairFromFile } from "./util"
 import * as borsh from "borsh";
 import fs from "mz/fs";
 import path from "path";
@@ -81,13 +81,15 @@ export async function configureClientAccount(accountSpaceSize: number) {
   }
 }
 
-export async function pingProgram(programName: string) {
+export async function pingProgram(programName: string, operation: number, operation_value: number) {
   console.log("Pinging program... ", programName);
+
+  let calcInstructions = await createCalculatorInstructions(operation, operation_value);
 
   const instruction = new TransactionInstruction({
     keys: [{ pubkey: clientPubKey, isSigner: false, isWritable: true }],
     programId,
-    data: Buffer.alloc(0),
+    data: calcInstructions,
   });
 
   await sendAndConfirmTransaction(
@@ -103,7 +105,7 @@ export async function demo(programName: string, accountSpaceSize: number) {
   await getLocalAccount();
   await getProgram(programName);
   await configureClientAccount(accountSpaceSize);
-  await pingProgram(programName);
+  await pingProgram(programName, 1, 5);
 }
 
 class DemoStuffCounter {
@@ -126,7 +128,30 @@ const DEMO_STUFF_SIZE = borsh.serialize(
   new DemoStuffCounter(),
 ).length;
 
-demo("program", DEMO_STUFF_SIZE).then(
+class Calculator {
+  value = 0;
+  constructor(fields: { value: number } | undefined = undefined) {
+    if (fields) {
+      this.value = fields.value;
+    }
+  }
+}
+
+const CalculatorSchema = {
+  struct: {
+    value: 'u32',
+  },
+};
+
+const CALCULATOR_SIZE = borsh.serialize(
+  CalculatorSchema,
+  new Calculator(),
+).length;
+
+
+
+
+demo("program", CALCULATOR_SIZE).then(
   () => process.exit(),
   err => {
     console.error(err);
