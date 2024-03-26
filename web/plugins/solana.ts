@@ -1,4 +1,4 @@
-import "solana-wallets-vue/styles.css";
+// import "solana-wallets-vue/styles.css";
 import SolanaWallets from "solana-wallets-vue";
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import {

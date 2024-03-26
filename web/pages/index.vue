@@ -23,6 +23,4 @@ watch(connected, (newConnectedStatus, prevConnectedStatus) => {
     console.log('Wallet disconnected');
   }
 });
-
-const soldo = ref(0);
 </script>
