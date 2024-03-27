@@ -23,7 +23,7 @@ let clientPubKey: PublicKey;
 const PROGRAM_PATH = path.resolve(__dirname, "../dist/program");
 
 export async function connect() {
-  connection = new Connection("http://127.0.0.1:8899", "confirmed");
+  connection = new Connection("https://api.testnet.solana.com/", "confirmed");
   console.log("Successfully connected to localhost");
 }
 
@@ -31,17 +31,17 @@ export async function getLocalAccount() {
   const configYml = await fs.readFile(CONFIG_FILE_PATH, { encoding: "utf-8" });
   const keypairPath = await yaml.parse(configYml).keypair_path;
   localKeypair = await createKeypairFromFile(keypairPath);
-  const airdropRequest = await connection.requestAirdrop(
-    localKeypair.publicKey,
-    LAMPORTS_PER_SOL * 2
-  );
-  const latestBlockhash = await connection.getLatestBlockhash();
-  await connection.confirmTransaction({
-    signature: airdropRequest,
-    lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
-    blockhash: latestBlockhash.blockhash,
-
-  });
+  // const airdropRequest = await connection.requestAirdrop(
+  //   localKeypair.publicKey,
+  //   LAMPORTS_PER_SOL * 2
+  // );
+  // const latestBlockhash = await connection.getLatestBlockhash();
+  // await connection.confirmTransaction({
+  //   signature: airdropRequest,
+  //   lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+  //   blockhash: latestBlockhash.blockhash,
+  //
+  // });
 
   console.log("Local account loaded successfully");
   console.log("Local account address is: ", localKeypair.publicKey);
