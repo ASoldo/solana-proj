@@ -10,13 +10,11 @@
     <h1 v-if="connected">
       {{ ballance_frontend }} SOL
       <span class="bg-blue-500 rounded-2xl p-1.5 mx-1 text-white">{{
-        wallet?.adapter.publicKey
-      }}</span>
+      wallet?.adapter.publicKey
+    }}</span>
     </h1>
     <h1>WebSocket messages</h1>
-    <ul
-      class="h-32 overflow-hidden overflow-y-auto border-black border p-2 m-2"
-    >
+    <ul class="h-32 overflow-hidden overflow-y-auto border-black border p-2 m-2">
       <li v-for="(message, index) in messages" :key="index">
         {{ message.params.result.value.account.data }}
       </li>
@@ -57,6 +55,8 @@ const fetchCalculatorValueNew = async (storageAccountPubkey: string) => {
     throw new Error("Failed to find account");
   }
 
+  console.log(accountInfo);
+
   // console.log("Data length:", accountInfo.data.length);
   console.log("First 4 bytes:", accountInfo.data.subarray(0, 4));
 
@@ -77,6 +77,30 @@ const fetchCalculatorValueNew = async (storageAccountPubkey: string) => {
   } catch (error) {
     console.error("Deserialization error:", error);
   }
+  //
+  // const pda = await findUserSpecificAddress(
+  //   wallet.value?.adapter.publicKey as web3.PublicKey,
+  //   new web3.PublicKey(storageAccountPubkey),
+  // );
+  // console.log("PDA:", pda.toBase58());
+  // const accountInfos = await connection.getAccountInfo(pda);
+  // console.log("PDA account info:", accountInfos);
+
+  // const programId = new web3.PublicKey(
+  //   "6kxiACgAeYMhpexsSEH2fqp7XUDUWSv1sVdrxFYcoEnE",
+  // );
+  // Ensure you use the correct seeds to match how the PDA was generated in your Rust program
+  // const seeds = [
+  //   Buffer.from(
+  //     "calculator",
+  //   ) /* other seeds if any, e.g., userPublicKey.toBuffer() */,
+  // ];
+  // const [calculatorPDA] = await web3.PublicKey.findProgramAddress(
+  //   seeds,
+  //   programId,
+  // );
+  //
+  // fetchCalculatorValueNew(calculatorPDA.toString());
 };
 
 const store = useCounterStore();
@@ -98,7 +122,7 @@ const decodeStoredValue = (data: any) => {
   return storedValue;
 };
 
-const STORAGE_ACCOUNT = "4ehYYoGS5PpkYACNMPwZKeQ5WWmKnV3t9PsjCdULwb48";
+const STORAGE_ACCOUNT = "CBJffHoaQAiV5HuLwEkXgb7k4Px6Ys7YS8waQzCDUFHt";
 
 fetchCalculatorValueNew(STORAGE_ACCOUNT);
 
@@ -177,7 +201,7 @@ watch(connected, async (newConnectedStatus, prevConnectedStatus) => {
 const sendSol = () => {
   const transaction = new web3.Transaction();
   const recipientPubKey = new web3.PublicKey(
-    "6cGupPkbJy2mYHuBJu4Wgn345NiBCpU4P4vrjTvZeMX2",
+    "CBJffHoaQAiV5HuLwEkXgb7k4Px6Ys7YS8waQzCDUFHt",
   );
 
   const sendSolInstruction = web3.SystemProgram.transfer({
@@ -207,7 +231,7 @@ const connectWebSocket = () => {
       id: 1,
       method: "programSubscribe",
       params: [
-        "4ehYYoGS5PpkYACNMPwZKeQ5WWmKnV3t9PsjCdULwb48",
+        "CBJffHoaQAiV5HuLwEkXgb7k4Px6Ys7YS8waQzCDUFHt",
         {
           encoding: "jsonParsed",
           commitment: "finalized",
@@ -250,6 +274,17 @@ const fetchBalance = async () => {
   );
   ballance_frontend.value = balance / web3.LAMPORTS_PER_SOL;
 };
+
+async function findUserSpecificAddress(
+  userPublicKey: web3.PublicKey,
+  programId: web3.PublicKey,
+): Promise<web3.PublicKey> {
+  const [userSpecificPDA] = await web3.PublicKey.findProgramAddress(
+    [userPublicKey.toBuffer()],
+    programId,
+  );
+  return userSpecificPDA;
+}
 
 onMounted(async () => {
   connectWebSocket();
