@@ -29,6 +29,55 @@ import { ref, watch, onMounted, onUnmounted } from "vue";
 import * as web3 from "@solana/web3.js";
 import { useCounterStore } from "@/stores/counter";
 import { WalletMultiButton, useWallet } from "solana-wallets-vue";
+import { deserialize, type Schema, serialize } from "borsh";
+
+class Calculator {
+  value = 0;
+  constructor(fields: { value: number } | undefined = undefined) {
+    if (fields) {
+      this.value = fields.value;
+    }
+  }
+}
+
+const CalculatorSchema: Schema = new Map([
+  [Calculator, { kind: "struct", fields: [["value", "u32"]] }],
+]);
+
+const fetchCalculatorValueNew = async (storageAccountPubkey: string) => {
+  const connection = new web3.Connection(
+    web3.clusterApiUrl("testnet"),
+    "confirmed",
+  );
+  const accountInfo = await connection.getAccountInfo(
+    new web3.PublicKey(storageAccountPubkey),
+  );
+
+  if (accountInfo === null) {
+    throw new Error("Failed to find account");
+  }
+
+  // console.log("Data length:", accountInfo.data.length);
+  console.log("First 4 bytes:", accountInfo.data.subarray(0, 4));
+
+  console.log(
+    "Account data bytes:",
+    Array.from(accountInfo.data).map((byte) => byte.toString(16)),
+  );
+  console.log("Account data:", accountInfo.data);
+  const storedValue = decodeStoredValue(accountInfo.data);
+  console.log("Decoded stored value:", storedValue);
+  try {
+    const calculator = deserialize(
+      CalculatorSchema,
+      Calculator,
+      accountInfo.data.subarray(0, 4),
+    );
+    console.log("Calculator value:", calculator.value);
+  } catch (error) {
+    console.error("Deserialization error:", error);
+  }
+};
 
 const store = useCounterStore();
 const { wallet, connected, signTransaction, sendTransaction, publicKey } =
@@ -38,7 +87,22 @@ const messages =
   ref<Array<ProgramNotificationResponse>>(Array<ProgramNotificationResponse>());
 const receivedData = ref<ProgramNotificationResponse | null>(null);
 
-interface ProgramNotificationResponse {
+const decodeStoredValue = (data: any) => {
+  console.log(data);
+  // Create a DataView on top of the Buffer
+  const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+
+  // Assuming the value is a 32-bit unsigned integer at the beginning of the data
+  const storedValue = view.getUint32(0, true); // true for little-endian
+
+  return storedValue;
+};
+
+const STORAGE_ACCOUNT = "4ehYYoGS5PpkYACNMPwZKeQ5WWmKnV3t9PsjCdULwb48";
+
+fetchCalculatorValueNew(STORAGE_ACCOUNT);
+
+type ProgramNotificationResponse = {
   jsonrpc: string;
   method: string;
   params: {
@@ -60,7 +124,7 @@ interface ProgramNotificationResponse {
     };
     subscription: number;
   };
-}
+};
 
 type AccountNotification = {
   jsonrpc: string;
@@ -132,11 +196,11 @@ const sendSol = () => {
     console.log(sig);
   });
 };
-
+const ws = ref();
 const connectWebSocket = () => {
-  const ws = new WebSocket("wss://api.testnet.solana.com/");
+  ws.value = new WebSocket("wss://api.testnet.solana.com/");
 
-  ws.onopen = () => {
+  ws.value.onopen = () => {
     console.log("WebSocket connected");
     const subscribeMessage = {
       jsonrpc: "2.0",
@@ -150,10 +214,10 @@ const connectWebSocket = () => {
         },
       ],
     };
-    ws.send(JSON.stringify(subscribeMessage));
+    ws.value.send(JSON.stringify(subscribeMessage));
   };
 
-  ws.onmessage = (event: any) => {
+  ws.value.onmessage = (event: any) => {
     const parsedData: ProgramNotificationResponse = JSON.parse(event.data);
     receivedData.value = parsedData;
     if (receivedData.value.method === "programNotification") {
@@ -162,11 +226,11 @@ const connectWebSocket = () => {
     }
   };
 
-  ws.onerror = (error) => {
+  ws.value.onerror = (error: any) => {
     console.error("WebSocket error: ", error);
   };
 
-  ws.onclose = () => {
+  ws.value.onclose = () => {
     console.log("WebSocket disconnected");
   };
 };
@@ -200,6 +264,16 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  console.log("Unmounted");
+  if (ws.value && receivedData.value) {
+    console.log("Unsubscribing and disconnecting WebSocket");
+    const unsubscribeMessage = {
+      jsonrpc: "2.0",
+      id: 1,
+      method: "programUnsubscribe",
+      params: [receivedData?.value.params.subscription],
+    };
+    ws.value.send(JSON.stringify(unsubscribeMessage));
+    ws.value.close();
+  }
 });
 </script>
